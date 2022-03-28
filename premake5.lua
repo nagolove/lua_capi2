@@ -7,6 +7,10 @@ workspace "lua_capi"
         "/usr/include/luajit-2.1" 
     }
     links { "luajit-5.1" }
+    buildoptions { 
+        "-fPIC",
+        "-Wall"
+    }
 
     project "ex_01"
         files { "*.h", "ex_01.c" }
@@ -19,7 +23,6 @@ workspace "lua_capi"
         language "C"
 
         --targetdir "bin/%{cfg.buildcfg}"
-        --buildoptions { "-fPIC" }
         --libdirs { "/usr/lib" }
         --links { "lua5.1" }
 
