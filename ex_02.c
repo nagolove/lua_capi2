@@ -8,6 +8,8 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
+#include "lua_tools.h"
+
 typedef struct Object {
     int some_data;
 } Object;
@@ -15,31 +17,6 @@ typedef struct Object {
 typedef struct Buffer {
     int some_data;
 } Buffer;
-
-static const char *stack_dump(lua_State *lua) {
-    static char ret[1024] = {0, };
-    char *ptr = ret;
-    int top = lua_gettop(lua);
-    for (int i = 1; i <= top; i++) {
-        int t = lua_type(lua, i);
-        switch (t) {
-            case LUA_TSTRING: 
-                ptr += sprintf(ptr, "’%s’", lua_tostring(lua, i));
-                break;
-            case LUA_TBOOLEAN: 
-                ptr += sprintf(ptr, lua_toboolean(lua, i) ? "true" : "false");
-                break;
-            case LUA_TNUMBER: 
-                ptr += sprintf(ptr, "%g", lua_tonumber(lua, i));
-                break;
-            default: 
-                ptr += sprintf(ptr, "%s", lua_typename(lua, t));
-                break;
-        }
-        ptr += sprintf(ptr, " "); 
-    }
-    return ret;
-}
 
 static int object_tostring(lua_State *lua) {
     printf("object_tostring 01: %s\n", stack_dump(lua));
@@ -127,43 +104,12 @@ const luaL_Reg Object_methods[5] = {
     {NULL, NULL},
 };
 
-void register_methods(lua_State *lua, const char *mtname, const luaL_Reg *methods) {
-    luaL_newmetatable(lua, mtname);
-    luaL_Reg *cur = (luaL_Reg*)methods - 1;
-
-    lua_pushvalue(lua, -1);
-    lua_setfield(lua, -2, "__index");
-
-    while (1) {
-        cur++;
-        if (!cur->name) {
-            break;
-        }
-        lua_pushcclosure(lua, cur->func, 0);
-        lua_setfield(lua, -2, cur->name);
-    }
-}
-
 int main(void) {
     lua_State *lua = luaL_newstate();
     luaL_openlibs(lua);
 
     /////////////////////////////////////////////
     register_methods(lua, "Buffer", Object_methods);
-    /*
-    luaL_newmetatable(lua, "Buffer");
-
-    lua_pushvalue(lua, -1);
-    lua_setfield(lua, -2, "__index");
-
-    // lua_pushcclosure(lua, object_tostring, {количество upvalue});
-    lua_pushcclosure(lua, object_tostring, 0);
-    // Установка поля метатаблицы
-    lua_setfield(lua, -2, "__tostring");
-
-    lua_pushcclosure(lua, object_do, 0);
-    lua_setfield(lua, -2, "does");
-    */
     /////////////////////////////////////////////
 
     luaL_newmetatable(lua, "Object");

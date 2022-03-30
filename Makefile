@@ -9,33 +9,42 @@ ifndef verbose
 endif
 
 ifeq ($(config),debug)
+  lua_tools_config = debug
   ex_01_config = debug
   ex_02_config = debug
 endif
 ifeq ($(config),release)
+  lua_tools_config = release
   ex_01_config = release
   ex_02_config = release
 endif
 
-PROJECTS := ex_01 ex_02
+PROJECTS := lua_tools ex_01 ex_02
 
 .PHONY: all clean help $(PROJECTS) 
 
 all: $(PROJECTS)
 
-ex_01:
+lua_tools:
+ifneq (,$(lua_tools_config))
+	@echo "==== Building lua_tools ($(lua_tools_config)) ===="
+	@${MAKE} --no-print-directory -C . -f lua_tools.make config=$(lua_tools_config)
+endif
+
+ex_01: lua_tools
 ifneq (,$(ex_01_config))
 	@echo "==== Building ex_01 ($(ex_01_config)) ===="
 	@${MAKE} --no-print-directory -C . -f ex_01.make config=$(ex_01_config)
 endif
 
-ex_02:
+ex_02: lua_tools
 ifneq (,$(ex_02_config))
 	@echo "==== Building ex_02 ($(ex_02_config)) ===="
 	@${MAKE} --no-print-directory -C . -f ex_02.make config=$(ex_02_config)
 endif
 
 clean:
+	@${MAKE} --no-print-directory -C . -f lua_tools.make clean
 	@${MAKE} --no-print-directory -C . -f ex_01.make clean
 	@${MAKE} --no-print-directory -C . -f ex_02.make clean
 
@@ -49,6 +58,7 @@ help:
 	@echo "TARGETS:"
 	@echo "   all (default)"
 	@echo "   clean"
+	@echo "   lua_tools"
 	@echo "   ex_01"
 	@echo "   ex_02"
 	@echo ""

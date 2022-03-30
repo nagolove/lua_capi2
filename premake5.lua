@@ -12,14 +12,21 @@ workspace "lua_capi"
         "-Wall"
     }
 
+    project "lua_tools"
+        files { ".*h", "lua_tools.c" }
+        kind "StaticLib"
+        language "C"
+
     project "ex_01"
         files { "*.h", "ex_01.c" }
         kind "ConsoleApp"
+        links { "lua_tools" }
         language "C"
 
     project "ex_02"
         files { "*.h", "ex_02.c" }
         kind "ConsoleApp"
+        links { "lua_tools" }
         language "C"
 
         --targetdir "bin/%{cfg.buildcfg}"
