@@ -8,17 +8,6 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
-const char *code = 
-"print(\"start\")"
-
-"local o = factory.new_object()"
-"print(tostring(o))"
-
-"local b = factory.new_buffer()"
-"print(tostring(b))"
-
-"print(\"end\")";
-
 typedef struct Object {
     int some_data;
 } Object;
@@ -66,32 +55,42 @@ static void print_stack_dump (lua_State *lua) {
 }
 
 static int new_buffer(lua_State *lua) {
+    // [.., ]
     printf("new buffer\n");
     Buffer *buf = (Buffer*)lua_newuserdata(lua, sizeof(Buffer));
+    // [.., ud]
     buf->some_data = 11;
 
     printf("stack 01: %s\n", stack_dump(lua));
 
+    // [.., ud, M]
     luaL_getmetatable(lua, "Buffer");
+    // [.., ud]
     lua_setmetatable(lua, -2);
 
     printf("stack 02: %s\n", stack_dump(lua));
 
+    // [.., -> ud]
     return 1;
 }
 
 static int new_object(lua_State *lua) {
+    // [.., ]
     printf("new object\n");
     Object *obj = (Object*)lua_newuserdata(lua, sizeof(Object));
+    // [.., ud]
     obj->some_data = 1;
 
     printf("stack 01: %s\n", stack_dump(lua));
 
+    // [.., ud, M]
     luaL_getmetatable(lua, "Object");
+    // [.., ud]
     lua_setmetatable(lua, -2);
 
     printf("stack 02: %s\n", stack_dump(lua));
 
+    // [.., -> ud]
     return 1;
 }
 
@@ -114,6 +113,9 @@ int main(void) {
     luaL_openlibs(lua);
 
     luaL_newmetatable(lua, "Buffer");
+    lua_pushcclosure(lua, object_tostring, 0);
+    // Установка поля метатаблицы
+    lua_setfield(lua, -2, "__tostring");
 
     luaL_newmetatable(lua, "Object");
     printf("stack 01: %s\n", stack_dump(lua));
@@ -127,16 +129,10 @@ int main(void) {
     luaL_register(lua, "factory", functions);
     printf("stack 03: %s\n", stack_dump(lua));
 
-    /*
-    int ret = luaL_dostring(lua, code);
-    if (ret != 0) {
-        printf("error in lua code\n");
-    }
-    */
-
     int ret = luaL_dofile(lua, "ex_01.lua");
     if (ret != 0) {
-        printf("error in lua code\n");
+        const char *err_msg = luaL_checkstring(lua, lua_gettop(lua));
+        printf("error in lua code [%s]\n", err_msg);
     }
 
     lua_close(lua);
