@@ -4,7 +4,7 @@ workspace "lua_capi"
     targetdir "."
     includedirs { 
         ".", 
-        "/usr/include/luajit-2.1" 
+        --"/usr/include/luajit-2.1" 
     }
     links { "luajit-5.1" }
     buildoptions { 
@@ -25,6 +25,12 @@ workspace "lua_capi"
 
     project "ex_02"
         files { "*.h", "ex_02.c" }
+        kind "ConsoleApp"
+        links { "lua_tools" }
+        language "C"
+
+    project "ex_03"
+        files { "*.h", "ex_03.c" }
         kind "ConsoleApp"
         links { "lua_tools" }
         language "C"

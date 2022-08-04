@@ -7,6 +7,7 @@ local record Factory
     process: function(Buffer)
 end
 --]]
+
 print("start")
 local o = factory.new_object()
 
