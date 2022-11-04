@@ -6,7 +6,8 @@ workspace "lua_capi"
         ".", 
         --"/usr/include/luajit-2.1" 
     }
-    links { "luajit-5.1" }
+    --links { "luajit-5.1" }
+    links { "lua" }
     buildoptions { 
         "-fPIC",
         "-Wall"
@@ -31,6 +32,12 @@ workspace "lua_capi"
 
     project "ex_03"
         files { "*.h", "ex_03.c" }
+        kind "ConsoleApp"
+        links { "lua_tools" }
+        language "C"
+
+    project "ex_04"
+        files { "*.h", "ex_04.c" }
         kind "ConsoleApp"
         links { "lua_tools" }
         language "C"

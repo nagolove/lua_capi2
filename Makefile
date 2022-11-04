@@ -13,15 +13,17 @@ ifeq ($(config),debug)
   ex_01_config = debug
   ex_02_config = debug
   ex_03_config = debug
+  ex_04_config = debug
 endif
 ifeq ($(config),release)
   lua_tools_config = release
   ex_01_config = release
   ex_02_config = release
   ex_03_config = release
+  ex_04_config = release
 endif
 
-PROJECTS := lua_tools ex_01 ex_02 ex_03
+PROJECTS := lua_tools ex_01 ex_02 ex_03 ex_04
 
 .PHONY: all clean help $(PROJECTS) 
 
@@ -51,11 +53,18 @@ ifneq (,$(ex_03_config))
 	@${MAKE} --no-print-directory -C . -f ex_03.make config=$(ex_03_config)
 endif
 
+ex_04: lua_tools
+ifneq (,$(ex_04_config))
+	@echo "==== Building ex_04 ($(ex_04_config)) ===="
+	@${MAKE} --no-print-directory -C . -f ex_04.make config=$(ex_04_config)
+endif
+
 clean:
 	@${MAKE} --no-print-directory -C . -f lua_tools.make clean
 	@${MAKE} --no-print-directory -C . -f ex_01.make clean
 	@${MAKE} --no-print-directory -C . -f ex_02.make clean
 	@${MAKE} --no-print-directory -C . -f ex_03.make clean
+	@${MAKE} --no-print-directory -C . -f ex_04.make clean
 
 help:
 	@echo "Usage: make [config=name] [target]"
@@ -71,5 +80,6 @@ help:
 	@echo "   ex_01"
 	@echo "   ex_02"
 	@echo "   ex_03"
+	@echo "   ex_04"
 	@echo ""
 	@echo "For more information, see https://github.com/premake/premake-core/wiki"

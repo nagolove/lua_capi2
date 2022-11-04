@@ -8,6 +8,8 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
+#include "lua_tools.h"
+
 typedef struct Object {
     int some_data;
 } Object;
@@ -16,31 +18,6 @@ typedef struct Buffer {
     int some_data;
 } Buffer;
 
-static const char *stack_dump(lua_State *lua) {
-    static char ret[1024] = {0, };
-    char *ptr = ret;
-    int top = lua_gettop(lua);
-    for (int i = 1; i <= top; i++) {
-        int t = lua_type(lua, i);
-        switch (t) {
-            case LUA_TSTRING: 
-                ptr += sprintf(ptr, "’%s’", lua_tostring(lua, i));
-                break;
-            case LUA_TBOOLEAN: 
-                ptr += sprintf(ptr, lua_toboolean(lua, i) ? "true" : "false");
-                break;
-            case LUA_TNUMBER: 
-                ptr += sprintf(ptr, "%g", lua_tonumber(lua, i));
-                break;
-            default: 
-                ptr += sprintf(ptr, "%s", lua_typename(lua, t));
-                break;
-        }
-        ptr += sprintf(ptr, " "); 
-    }
-    return ret;
-}
-
 static int object_tostring(lua_State *lua) {
     printf("object_tostring 01: %s\n", stack_dump(lua));
     Object *o = (Object*)lua_touserdata(lua, 1);
@@ -48,6 +25,10 @@ static int object_tostring(lua_State *lua) {
     sprintf(buf, "%d", o->some_data);
     lua_pushstring(lua, buf);
     return 1;
+}
+
+static void print_stack_dump (lua_State *lua) {
+    printf("%s\n", stack_dump(lua));
 }
 
 static int new_buffer(lua_State *lua) {
@@ -104,14 +85,53 @@ static const struct luaL_Reg functions[] =
     {NULL, NULL}
 };
 
+static int empty(lua_State *lua) {
+    printf("empty\n");
+    return 0;
+}
+
+static int object_do(lua_State *lua) {
+    luaL_checkudata(lua, 1, "Buffer");
+    printf("does\n");
+    return 0;
+}
+
+const luaL_Reg Object_methods[5] = {
+    {"do1", object_do},
+    {"do2", object_do},
+    {"do3", object_do},
+    {"__tostring", object_tostring},
+    {NULL, NULL},
+};
+
+void check_sizeof_on_array() {
+
+    typedef struct {
+        float x, y;
+    } cpVect;
+
+    cpVect verts[] = {
+        {0.0f, 0.0f},
+        {0.0f, 0.0f},
+        {0.0f, 0.0f},
+        {0.0f, 0.0f},
+        {0.0f, 0.0f},
+        {0.0f, 0.0f},
+    };
+
+    int arr_len = sizeof(verts) / sizeof(verts[0]);
+    printf("arr len = %d\n", arr_len);
+}
+
 int main(void) {
+    check_sizeof_on_array();
+
     lua_State *lua = luaL_newstate();
     luaL_openlibs(lua);
 
-    luaL_newmetatable(lua, "Buffer");
-    lua_pushcclosure(lua, object_tostring, 0);
-    // Установка поля метатаблицы
-    lua_setfield(lua, -2, "__tostring");
+    /////////////////////////////////////////////
+    register_methods(lua, "Buffer", Object_methods);
+    /////////////////////////////////////////////
 
     luaL_newmetatable(lua, "Object");
     printf("stack 01: %s\n", stack_dump(lua));
@@ -122,18 +142,26 @@ int main(void) {
     printf("stack 02: %s\n", stack_dump(lua));
 
     // Регистрация модуля
-    /*luaL_register(lua, "factory", functions);*/
-
-    printf("mod1 [%s]\n", stack_dump(lua));
-    // Регистрация модуля для новых версий Lua
     lua_createtable(lua, 0, 0);
     luaL_setfuncs(lua, functions, 0);
     lua_setglobal(lua, "factory");
-    printf("mod2 [%s]\n", stack_dump(lua));
 
-    printf("stack 03: %s\n", stack_dump(lua));
+    ///////////////////////////////////////
+    // Создание таблички с полем-функцией и ее присванивание в глобальное
+    // пространство имен.
+    lua_newtable(lua);
+    lua_pushstring(lua, "empty");
+    lua_pushcclosure(lua, empty, 0);
+    // t[k] = v where stack is [.., k, v]
+    lua_settable(lua, -3);
+    // pops the stack and set "system" global variable to popped value
+    lua_setglobal(lua, "system");
+    ///////////////////////////////////////
 
-    int ret = luaL_dofile(lua, "ex_01.lua");
+    // Регистрация функции с глобальным именем.
+    lua_register(lua, "empty", empty);
+
+    int ret = luaL_dofile(lua, "ex_02.lua");
     if (ret != 0) {
         const char *err_msg = luaL_checkstring(lua, lua_gettop(lua));
         printf("error in lua code [%s]\n", err_msg);

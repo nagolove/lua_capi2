@@ -121,8 +121,10 @@ int main(void) {
     printf("stack 02: %s\n", stack_dump(lua));
 
     // Регистрация модуля
-    luaL_register(lua, "factory", functions);
-    printf("stack 03: %s\n", stack_dump(lua));
+    /*luaL_register(lua, "factory", functions);*/
+    lua_createtable(lua, 0, 0);
+    luaL_setfuncs(lua, functions, 0);
+    lua_setglobal(lua, "factory");
 
     ///////////////////////////////////////
     // Создание таблички с полем-функцией и ее присванивание в глобальное
